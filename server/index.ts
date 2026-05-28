@@ -254,6 +254,10 @@ app.get("/api/export/advising.csv", (_req, res) => {
   res.send(toCsv(rows));
 });
 
-app.listen(PORT, () => {
-  console.log(`Pathway Command Center API listening on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Pathway Command Center API listening on http://localhost:${PORT}`);
+  });
+}
+
+export default app;

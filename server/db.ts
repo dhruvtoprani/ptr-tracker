@@ -5,7 +5,9 @@ import { recalculateAppState } from "../shared/rules";
 import type { AppState } from "../shared/types";
 import { createSeedState } from "./seedData";
 
-const DB_PATH = resolve(process.cwd(), "data", "pathway-command-center.db");
+const DB_PATH = process.env.VERCEL
+  ? "/tmp/pathway-command-center.db"
+  : resolve(process.cwd(), "data", "pathway-command-center.db");
 
 mkdirSync(dirname(DB_PATH), { recursive: true });
 

@@ -3,3 +3,4 @@ dist
 *.log
 data/pathway-command-center.db
 data/pathway-command-center.db-*
+.vercel
