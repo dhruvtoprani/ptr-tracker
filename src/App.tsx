@@ -46,7 +46,15 @@ import {
   type Student,
   type StudentAssignmentRecord
 } from "../shared/types";
-import { downloadFromApi, fetchState, fetchSupervisorSummary, saveState } from "./lib/api";
+import {
+  clearAuthToken,
+  downloadFromApi,
+  fetchState,
+  fetchSupervisorSummary,
+  login,
+  logout,
+  saveState
+} from "./lib/api";
 import { formatDate, uid } from "./lib/utils";
 import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
@@ -160,8 +168,12 @@ export function App() {
   const [state, setState] = useState<AppState | null>(null);
   const [view, setView] = useState<View>("dashboard");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUsername, setAuthUsername] = useState("mentor");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [filters, setFilters] = useState<StudentFilters>(INITIAL_FILTERS);
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -188,7 +200,22 @@ export function App() {
   const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, AttendanceStatus>>({});
   const [supervisorSummary, setSupervisorSummary] = useState("");
 
+  const resetAuthSession = () => {
+    clearAuthToken();
+    setIsAuthenticated(false);
+    setState(null);
+    setSelectedStudentId(null);
+    setShowAddStudent(false);
+  };
+
+  const isAuthError = (message: string) =>
+    /authentication required|invalid username|invalid password|401|unauthorized/i.test(message);
+
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     const load = async () => {
       setLoading(true);
       setError(null);
@@ -198,13 +225,19 @@ export function App() {
         const summary = await fetchSupervisorSummary();
         setSupervisorSummary(summary);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load app state");
+        const message = loadError instanceof Error ? loadError.message : "Failed to load app state";
+        if (isAuthError(message)) {
+          resetAuthSession();
+          setError("Your session expired. Sign in again.");
+        } else {
+          setError(message);
+        }
       } finally {
         setLoading(false);
       }
     };
     void load();
-  }, []);
+  }, [isAuthenticated]);
 
   const persistMutation = async (mutator: (draft: AppState) => void) => {
     if (!state) return;
@@ -218,9 +251,60 @@ export function App() {
       setState(saved);
       setSupervisorSummary(generateSupervisorSummary(saved));
     } catch (mutationError) {
-      setError(mutationError instanceof Error ? mutationError.message : "Failed to save changes");
+      const message = mutationError instanceof Error ? mutationError.message : "Failed to save changes";
+      if (isAuthError(message)) {
+        resetAuthSession();
+        setError("Your session expired. Sign in again.");
+      } else {
+        setError(message);
+      }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!authUsername.trim() || !authPassword.trim()) {
+      setError("Username and password are required.");
+      return;
+    }
+
+    setAuthSubmitting(true);
+    setError(null);
+    try {
+      await login(authUsername.trim(), authPassword);
+      setAuthPassword("");
+      setIsAuthenticated(true);
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
+      clearAuthToken();
+      setIsAuthenticated(false);
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // no-op
+    } finally {
+      resetAuthSession();
+    }
+  };
+
+  const handleExport = async (path: string, fallbackName: string) => {
+    try {
+      await downloadFromApi(path, fallbackName);
+    } catch (downloadError) {
+      const message = downloadError instanceof Error ? downloadError.message : "Export failed.";
+      if (isAuthError(message)) {
+        resetAuthSession();
+        setError("Your session expired. Sign in again.");
+      } else {
+        setError(message);
+      }
     }
   };
 
@@ -556,11 +640,11 @@ export function App() {
               <p className="text-sm text-muted">Generate clean report-ready exports and supervisor narrative.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={() => downloadFromApi("/api/export/json")}>Export JSON</Button>
-              <Button variant="secondary" size="sm" onClick={() => downloadFromApi("/api/export/students.csv")}>Student CSV</Button>
-              <Button variant="secondary" size="sm" onClick={() => downloadFromApi("/api/export/assignments.csv")}>Assignment CSV</Button>
-              <Button variant="secondary" size="sm" onClick={() => downloadFromApi("/api/export/attendance.csv")}>Attendance CSV</Button>
-              <Button variant="secondary" size="sm" onClick={() => downloadFromApi("/api/export/advising.csv")}>Advising CSV</Button>
+              <Button variant="secondary" size="sm" onClick={() => void handleExport("/api/export/json", "pathway-command-center.json")}>Export JSON</Button>
+              <Button variant="secondary" size="sm" onClick={() => void handleExport("/api/export/students.csv", "student-summary.csv")}>Student CSV</Button>
+              <Button variant="secondary" size="sm" onClick={() => void handleExport("/api/export/assignments.csv", "assignment-progress.csv")}>Assignment CSV</Button>
+              <Button variant="secondary" size="sm" onClick={() => void handleExport("/api/export/attendance.csv", "attendance.csv")}>Attendance CSV</Button>
+              <Button variant="secondary" size="sm" onClick={() => void handleExport("/api/export/advising.csv", "advising-sessions.csv")}>Advising CSV</Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -573,8 +657,18 @@ export function App() {
               <Button
                 variant="secondary"
                 onClick={async () => {
-                  const summary = await fetchSupervisorSummary();
-                  setSupervisorSummary(summary);
+                  try {
+                    const summary = await fetchSupervisorSummary();
+                    setSupervisorSummary(summary);
+                  } catch (summaryError) {
+                    const message = summaryError instanceof Error ? summaryError.message : "Unable to generate summary.";
+                    if (isAuthError(message)) {
+                      resetAuthSession();
+                      setError("Your session expired. Sign in again.");
+                    } else {
+                      setError(message);
+                    }
+                  }
                 }}
               >
                 Generate Supervisor Summary
@@ -1942,6 +2036,50 @@ export function App() {
     );
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <h2 className="font-heading text-2xl text-deep-green">Pathway Command Center</h2>
+            <p className="text-sm text-muted">Sign in to access student records.</p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {error && (
+              <p className="rounded-xl border border-risk-red/40 bg-red-50 px-3 py-2 text-sm text-risk-red">
+                {error}
+              </p>
+            )}
+            <Input
+              placeholder="Username"
+              autoComplete="username"
+              value={authUsername}
+              onChange={(event) => setAuthUsername(event.target.value)}
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              autoComplete="current-password"
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void handleLogin();
+                }
+              }}
+            />
+            <Button onClick={() => void handleLogin()} disabled={authSubmitting} className="w-full">
+              {authSubmitting ? "Signing In..." : "Sign In"}
+            </Button>
+            <p className="text-xs text-muted">
+              Set `APP_USERNAME` and `APP_PASSWORD` on the server/Vercel project to change credentials.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -1974,6 +2112,9 @@ export function App() {
               <Button variant="secondary" onClick={() => setView("dashboard")}>
                 <Download className="h-4 w-4" />
                 Export Report
+              </Button>
+              <Button variant="secondary" onClick={() => void handleLogout()}>
+                Sign Out
               </Button>
             </div>
           </div>

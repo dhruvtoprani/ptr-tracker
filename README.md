@@ -32,6 +32,17 @@ Pathway Command Center is a React + TypeScript app for managing Pathway to Resea
 - Initial seed data is loaded from the roster rows in:
   - `server/seedData.ts`
 
+## Authentication
+
+- The app now requires username/password sign-in.
+- Configure credentials with environment variables:
+  - `APP_USERNAME`
+  - `APP_PASSWORD`
+  - optional `SESSION_TTL_SECONDS` (default: `43200`, 12 hours)
+- If env vars are not set, defaults are:
+  - username: `mentor`
+  - password: `pathway2026`
+
 ## Run
 
 ```bash

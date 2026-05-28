@@ -1,3 +1,4 @@
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import cors from "cors";
 import express from "express";
 import { z } from "zod";
@@ -10,9 +11,18 @@ bootstrapState();
 
 const app = express();
 const PORT = 8787;
+const AUTH_USERNAME = process.env.APP_USERNAME ?? "mentor";
+const AUTH_PASSWORD = process.env.APP_PASSWORD ?? "pathway2026";
+const SESSION_TTL_SECONDS = Number(process.env.SESSION_TTL_SECONDS ?? "43200");
+const activeSessions = new Map<string, number>();
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
+
+const LoginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1)
+});
 
 const AppStateSchema = z.object({
   students: z.array(z.any()),
@@ -41,7 +51,83 @@ function toCsv(rows: Record<string, string | number | boolean | null | undefined
   return lines.join("\n");
 }
 
+function safeCompare(value: string, expected: string): boolean {
+  const left = Buffer.from(value);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length) {
+    return false;
+  }
+  return timingSafeEqual(left, right);
+}
+
+function getBearerToken(req: express.Request): string | null {
+  const raw = req.header("Authorization");
+  if (!raw || !raw.startsWith("Bearer ")) {
+    return null;
+  }
+  return raw.slice("Bearer ".length).trim();
+}
+
+function isAuthorized(req: express.Request): boolean {
+  const token = getBearerToken(req);
+  if (!token) return false;
+  const expiresAt = activeSessions.get(token);
+  if (!expiresAt) return false;
+  if (expiresAt <= Date.now()) {
+    activeSessions.delete(token);
+    return false;
+  }
+  activeSessions.set(token, Date.now() + SESSION_TTL_SECONDS * 1000);
+  return true;
+}
+
 app.get("/api/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+app.post("/api/auth/login", (req, res) => {
+  const parsed = LoginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Username and password are required." });
+    return;
+  }
+
+  const { username, password } = parsed.data;
+  const usernameOk = safeCompare(username, AUTH_USERNAME);
+  const passwordOk = safeCompare(password, AUTH_PASSWORD);
+
+  if (!usernameOk || !passwordOk) {
+    res.status(401).json({ error: "Invalid username or password." });
+    return;
+  }
+
+  const token = randomUUID();
+  activeSessions.set(token, Date.now() + SESSION_TTL_SECONDS * 1000);
+  res.json({
+    token,
+    username: AUTH_USERNAME,
+    expiresInSeconds: SESSION_TTL_SECONDS
+  });
+});
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health" || req.path === "/auth/login") {
+    next();
+    return;
+  }
+
+  if (!isAuthorized(req)) {
+    res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+  next();
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  const token = getBearerToken(req);
+  if (token) {
+    activeSessions.delete(token);
+  }
   res.json({ ok: true });
 });
 
