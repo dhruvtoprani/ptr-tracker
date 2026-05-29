@@ -57,6 +57,52 @@
 - For Vercel, configure environment variables in Project Settings:
   - `APP_USERNAME`
   - `APP_PASSWORD`
-  - optional `SESSION_TTL_SECONDS`
+- optional `SESSION_TTL_SECONDS`
 - SQLite remains file-based; persistent writable storage behavior on serverless platforms should be reviewed before production use.
 
+---
+
+## Date
+- May 29, 2026
+
+## Scope of this change
+- Capture product screenshots for GitHub showcase.
+- Publish polished technical documentation explaining architecture, stack, and runtime behavior.
+
+## Step-by-step implementation log
+
+1. Implemented automated screenshot capture workflow
+- Added `scripts/capture-showcase-screenshots.mjs` using Playwright.
+- Script logs into the deployed app, navigates major product views, and saves screenshots in `docs/screenshots/`.
+- Captured:
+  - Login
+  - Dashboard overview
+  - Dashboard reporting panel
+  - Student Pokedex
+  - Student profile drawer
+  - Assignment matrix
+  - Attendance view
+  - Archive view
+  - Mobile dashboard
+
+2. Added screenshot asset library
+- Created `docs/screenshots/` and populated production screenshots for README embedding.
+
+3. Rewrote GitHub-facing README
+- Added live app + repo links.
+- Added full visual feature tour with embedded screenshots.
+- Added stack, architecture diagram, feature list, data model notes, auth setup, deployment notes, and screenshot regeneration instructions.
+
+4. Added formal technical architecture document
+- Created `docs/TECHNICAL_OVERVIEW.md`.
+- Documented:
+  - System architecture
+  - API routes
+  - Rule engine model
+  - Data contracts
+  - Seed mapping behavior
+  - Runtime persistence differences (local SQLite vs Vercel in-memory)
+
+5. Validation
+- Confirmed screenshots were generated and written under `docs/screenshots`.
+- Confirmed README references match generated screenshot filenames.

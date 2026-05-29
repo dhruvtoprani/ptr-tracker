@@ -61,6 +61,23 @@
 - `README.md` updated with auth/env configuration.
 - `TECHNICAL_PROCESS_NOTES.md` created with step-by-step implementation log.
 
+10. Added showcase and technical docs for GitHub
+- Captured app screenshots for major views and features:
+  - Login
+  - Dashboard
+  - Reporting panel
+  - Student Pokedex
+  - Student profile
+  - Assignment matrix
+  - Attendance
+  - Archive
+  - Mobile dashboard
+- Added automated capture script:
+  - `scripts/capture-showcase-screenshots.mjs`
+- Added new architecture document:
+  - `docs/TECHNICAL_OVERVIEW.md`
+- Expanded `README.md` with screenshot-driven product tour and stack/architecture explanation.
+
 ## Configuration Added
 
 - `APP_USERNAME` (default: `mentor`)
