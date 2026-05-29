@@ -135,3 +135,38 @@
 4. Updated docs
 - Updated `README.md` to include PII toggle in features and screenshot command docs.
 - Updated `docs/TECHNICAL_OVERVIEW.md` security notes with PII mode behavior.
+
+---
+
+## Date
+- May 29, 2026
+
+## Scope of this change
+- Remove real student roster content from public repository code.
+- Shift seed loading to private backend/env/file sources.
+
+## Step-by-step implementation log
+
+1. Removed public roster seed content
+- Replaced hardcoded roster rows in `server/seedData.ts`.
+- The repo no longer contains embedded student seed records.
+
+2. Added private seed loading
+- `createSeedState()` now loads from:
+  - `PTR_SEED_STATE_B64` (preferred for Vercel)
+  - `PTR_SEED_STATE_JSON`
+  - `PTR_SEED_STATE_FILE`
+  - fallback `data/private/seed-state.json` (gitignored)
+- If no private seed is present, app starts with empty state.
+
+3. Added tooling for private seed setup
+- Added `scripts/encode-seed-state.mjs` to base64-encode an `AppState` JSON for env use.
+- Added npm script:
+  - `npm run seed:encode`
+
+4. Hardened production auth requirement
+- Updated `server/index.ts` to require `APP_USERNAME` and `APP_PASSWORD` in production/Vercel runtime.
+- Local dev still supports defaults for convenience.
+
+5. Updated privacy documentation
+- Updated `README.md`, `.env.example`, and `docs/TECHNICAL_OVERVIEW.md` with private seed setup guidance.

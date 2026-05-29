@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json && vite build",
     "preview": "vite preview",
     "start": "node --import tsx server/index.ts",
-    "docs:screenshots": "node scripts/capture-showcase-screenshots.mjs"
+    "docs:screenshots": "node scripts/capture-showcase-screenshots.mjs",
+    "seed:encode": "node scripts/encode-seed-state.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.1.0",

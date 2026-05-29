@@ -84,11 +84,24 @@
 - Disables Email/LinkedIn quick actions while redaction mode is enabled.
 - Updated screenshot automation to enable redaction by default and regenerated public docs screenshots.
 
+12. Removed public roster seeding and moved to private seed channels
+- Replaced hardcoded student roster in `server/seedData.ts`.
+- Added private seed loading through env/file:
+  - `PTR_SEED_STATE_B64`
+  - `PTR_SEED_STATE_JSON`
+  - `PTR_SEED_STATE_FILE`
+- Added fallback private local path: `data/private/seed-state.json` (gitignored).
+- Added `scripts/encode-seed-state.mjs` + `npm run seed:encode` to prepare secure env payloads.
+- Added production guard requiring `APP_USERNAME` and `APP_PASSWORD`.
+
 ## Configuration Added
 
 - `APP_USERNAME` (default: `mentor`)
 - `APP_PASSWORD` (default: `pathway2026`)
 - `SESSION_TTL_SECONDS` (default: `43200`)
+- `PTR_SEED_STATE_B64` (recommended private seed source)
+- `PTR_SEED_STATE_JSON` (optional)
+- `PTR_SEED_STATE_FILE` (optional, local/private)
 
 ## Validation Performed
 

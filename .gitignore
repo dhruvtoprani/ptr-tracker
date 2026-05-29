@@ -5,3 +5,7 @@ data/pathway-command-center.db
 data/pathway-command-center.db-*
 .vercel
 .DS_Store
+data/private/
+.env
+.env.*
+!.env.example

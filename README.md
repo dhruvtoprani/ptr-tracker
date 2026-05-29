@@ -73,15 +73,33 @@ flowchart LR
 
 ## Data Model and Seeding
 
-- Source roster data is mapped in [server/seedData.ts](server/seedData.ts).
-- `major` and `year` intentionally start blank and editable.
-- Multi-email rows are normalized with MSU email preference for primary contact.
+- Real student data is no longer stored in the public repo.
+- Seed loading in [server/seedData.ts](server/seedData.ts) now reads from private sources only:
+- `PTR_SEED_STATE_B64` (recommended for Vercel)
+- `PTR_SEED_STATE_JSON`
+- `PTR_SEED_STATE_FILE` (local/private file path)
+- Default local private file path: `data/private/seed-state.json` (gitignored).
+- If no private seed is configured, the app boots with an empty tracker.
 - Shared types and contract models are in [shared/types.ts](shared/types.ts).
+
+## Private Seed Setup
+
+1. Export your current tracker as JSON from the app (`Export JSON`).
+2. Save it locally as `data/private/seed-state.json` (this folder is gitignored).
+3. Generate a Vercel-safe base64 value:
+
+```bash
+npm run seed:encode data/private/seed-state.json
+```
+
+4. In Vercel Project Settings, set `PTR_SEED_STATE_B64` to that output.
+5. Redeploy, then run `/api/reset` once (or use the app reset flow) to apply the private seed.
 
 ## Authentication
 
 - Configure environment variables: `APP_USERNAME`, `APP_PASSWORD`, and optional `SESSION_TTL_SECONDS` (default `43200`).
 - Defaults when not set: username `mentor`, password `pathway2026`.
+- In production/Vercel, `APP_USERNAME` and `APP_PASSWORD` are required.
 
 ## Local Development
 
@@ -105,6 +123,7 @@ npm run build
 - App server: [server/index.ts](server/index.ts)
 - Local persistent DB file: `data/pathway-command-center.db`
 - In serverless environments, file persistence is not guaranteed; this project currently uses in-memory state during Vercel runtime.
+- Keep student data in `PTR_SEED_STATE_B64` (private env var), not in repository files.
 
 ## Screenshot Refresh Script
 

@@ -55,7 +55,7 @@ Pathway Command Center is a mentor-facing student tracking application for the P
 | `POST` | `/api/auth/logout` | Logout and token invalidation |
 | `GET` | `/api/state` | Read full application state |
 | `PUT` | `/api/state` | Save full application state (recalculates derived metrics) |
-| `POST` | `/api/reset` | Reset state from seeded roster |
+| `POST` | `/api/reset` | Reset state from configured private seed |
 | `GET` | `/api/dashboard-metrics` | Aggregated dashboard metrics |
 | `GET` | `/api/supervisor-summary` | Generated narrative summary |
 | `GET` | `/api/export/json` | Full JSON export |
@@ -117,15 +117,16 @@ Shared TS contracts live in `shared/types.ts` and include:
 
 This schema design keeps the UI layer decoupled from persistence details, making later migration to Supabase/Neon straightforward.
 
-## 7. Roster Seeding Strategy
+## 7. Private Seeding Strategy
 
-Seed code in `server/seedData.ts` maps uploaded roster fields into the app model.
+Seed loading in `server/seedData.ts` now uses private sources only:
 
-Important guarantees:
+- `PTR_SEED_STATE_B64` (base64-encoded `AppState` JSON)
+- `PTR_SEED_STATE_JSON`
+- `PTR_SEED_STATE_FILE` (local/private filesystem path)
+- fallback path `data/private/seed-state.json` (gitignored)
 
-- `major` and `year` are intentionally blank at initialization.
-- Multi-email rows are normalized; MSU email is prioritized as primary.
-- Profile metadata is retained for advising and reporting context.
+If none are configured, startup seed is an empty tracker state.
 
 ## 8. Persistence Behavior by Environment
 
@@ -147,6 +148,8 @@ If durable cloud persistence is required on Vercel, recommended next step is a m
 - Session TTL is configurable (`SESSION_TTL_SECONDS`).
 - Frontend stores the token in memory only (no localStorage token persistence).
 - UI includes a runtime `Hide PII` mode that redacts student names/emails/LinkedIn fields for demos and public screenshots.
+- Production runtime requires `APP_USERNAME` and `APP_PASSWORD`.
+- Real student seed records should be stored only in private environment variables or private files, not in Git.
 
 ## 10. Screenshot/Showcase Automation
 

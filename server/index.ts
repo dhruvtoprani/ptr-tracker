@@ -11,8 +11,14 @@ bootstrapState();
 
 const app = express();
 const PORT = 8787;
-const AUTH_USERNAME = process.env.APP_USERNAME ?? "mentor";
-const AUTH_PASSWORD = process.env.APP_PASSWORD ?? "pathway2026";
+const isProductionRuntime = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+const configuredUsername = process.env.APP_USERNAME?.trim();
+const configuredPassword = process.env.APP_PASSWORD;
+if (isProductionRuntime && (!configuredUsername || !configuredPassword)) {
+  throw new Error("APP_USERNAME and APP_PASSWORD must be set in production.");
+}
+const AUTH_USERNAME = configuredUsername || "mentor";
+const AUTH_PASSWORD = configuredPassword || "pathway2026";
 const SESSION_TTL_SECONDS = Number(process.env.SESSION_TTL_SECONDS ?? "43200");
 const activeSessions = new Map<string, number>();
 
