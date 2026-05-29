@@ -1,9 +1,9 @@
 import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
-import { recalculateAppState } from "../shared/rules";
-import type { AppState } from "../shared/types";
-import { createSeedState } from "./seedData";
+import { recalculateAppState } from "../shared/rules.js";
+import type { AppState } from "../shared/types.js";
+import { createSeedState } from "./seedData.js";
 
 type StateStore = {
   bootstrapState: () => void;

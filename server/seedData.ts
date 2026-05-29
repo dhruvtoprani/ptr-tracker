@@ -1,5 +1,5 @@
-import { recalculateAllStudents } from "../shared/rules";
-import type { ActivityState, AppState, Student } from "../shared/types";
+import { recalculateAllStudents } from "../shared/rules.js";
+import type { ActivityState, AppState, Student } from "../shared/types.js";
 
 const SANITIZED_SEED_ROWS = [
   {

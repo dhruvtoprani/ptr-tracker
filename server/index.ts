@@ -2,10 +2,10 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import cors from "cors";
 import express from "express";
 import { z } from "zod";
-import { buildDashboardMetrics, buildStudentExportRow, generateSupervisorSummary } from "../shared/metrics";
-import { recalculateAppState } from "../shared/rules";
-import type { AppState } from "../shared/types";
-import { bootstrapState, getState, resetStateWithSeed, saveState } from "./db";
+import { buildDashboardMetrics, buildStudentExportRow, generateSupervisorSummary } from "../shared/metrics.js";
+import { recalculateAppState } from "../shared/rules.js";
+import type { AppState } from "../shared/types.js";
+import { bootstrapState, getState, resetStateWithSeed, saveState } from "./db.js";
 
 bootstrapState();
 

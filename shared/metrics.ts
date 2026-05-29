@@ -4,14 +4,14 @@ import {
   type AssignmentType,
   type RiskLevel,
   type Student
-} from "./types";
+} from "./types.js";
 import {
   getAttendanceRate,
   getLastAdvisingDate,
   getMissingAssignmentCount,
   getNoShowCount,
   getStudentCompletionRate
-} from "./rules";
+} from "./rules.js";
 
 export type DashboardMetrics = {
   totalActiveStudents: number;

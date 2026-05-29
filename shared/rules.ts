@@ -6,7 +6,7 @@ import {
   type AttendanceRecord,
   type RiskState,
   type Student
-} from "./types";
+} from "./types.js";
 
 const ACTIVITY_EXPLANATIONS: Record<ActivityLevel, string> = {
   Excellent:
