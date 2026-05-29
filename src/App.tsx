@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Download,
+  EyeOff,
   ExternalLink,
   Eye,
   Mail,
@@ -174,6 +175,7 @@ export function App() {
   const [authUsername, setAuthUsername] = useState("mentor");
   const [authPassword, setAuthPassword] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [hidePii, setHidePii] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [filters, setFilters] = useState<StudentFilters>(INITIAL_FILTERS);
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -371,6 +373,12 @@ export function App() {
 
   const recentlyAdvised = useMemo(() => getRecentlyAdvisedStudents(activeStudents), [activeStudents]);
   const needingAttention = useMemo(() => getStudentsNeedingAttention(activeStudents), [activeStudents]);
+
+  const getStudentDisplayName = (student: Student) =>
+    hidePii ? `Student ${student.id.slice(-4).toUpperCase()}` : student.name;
+
+  const getStudentDisplayEmail = (student: Student) =>
+    hidePii ? "hidden@redacted.local" : student.email;
 
   const handleCreateStudent = async () => {
     if (!newStudent.name.trim() || !newStudent.email.trim()) {
@@ -589,7 +597,7 @@ export function App() {
                   className="flex items-center justify-between rounded-xl border border-soft-green p-3"
                 >
                   <div>
-                    <p className="font-medium text-charcoal">{student.name}</p>
+                    <p className="font-medium text-charcoal">{getStudentDisplayName(student)}</p>
                     <p className="text-xs text-muted">{student.dropOffRisk.reasons[0]}</p>
                   </div>
                   <Badge tone={student.dropOffRisk.level}>{student.dropOffRisk.level}</Badge>
@@ -614,7 +622,7 @@ export function App() {
                   className="flex items-center justify-between rounded-xl border border-soft-green p-3"
                 >
                   <div>
-                    <p className="font-medium text-charcoal">{student.name}</p>
+                    <p className="font-medium text-charcoal">{getStudentDisplayName(student)}</p>
                     <p className="text-xs text-muted">Last advised: {formatDate(getLastAdvisingDate(student))}</p>
                   </div>
                   <Button
@@ -782,8 +790,8 @@ export function App() {
                 <CardContent className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-heading text-lg text-deep-green">{student.name}</h3>
-                      <p className="text-xs text-muted">{student.email}</p>
+                      <h3 className="font-heading text-lg text-deep-green">{getStudentDisplayName(student)}</h3>
+                      <p className="text-xs text-muted">{getStudentDisplayEmail(student)}</p>
                     </div>
                     <Button
                       variant="ghost"
@@ -831,19 +839,27 @@ export function App() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => window.open(`mailto:${student.email}`, "_blank")}
+                      disabled={hidePii}
+                      onClick={() => {
+                        if (hidePii) return;
+                        window.open(`mailto:${student.email}`, "_blank");
+                      }}
                     >
                       <Mail className="h-4 w-4" />
-                      Email
+                      {hidePii ? "Email Hidden" : "Email"}
                     </Button>
                     {student.linkedinUrl && (
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => window.open(student.linkedinUrl, "_blank")}
+                        disabled={hidePii}
+                        onClick={() => {
+                          if (hidePii) return;
+                          window.open(student.linkedinUrl, "_blank");
+                        }}
                       >
                         <ExternalLink className="h-4 w-4" />
-                        LinkedIn
+                        {hidePii ? "LinkedIn Hidden" : "LinkedIn"}
                       </Button>
                     )}
                     <Button
@@ -1035,7 +1051,7 @@ export function App() {
                 {matrixRows.map(({ student }) => (
                   <tr key={student.id} className="rounded-xl bg-pale-green/60">
                     <td className="rounded-l-xl border border-soft-green bg-white px-2 py-3 font-medium">
-                      {student.name}
+                      {getStudentDisplayName(student)}
                     </td>
                     {assignmentOptions.map((assignment) => {
                       const record = student.assignments[assignment.id];
@@ -1162,7 +1178,7 @@ export function App() {
               <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {activeStudents.map((student) => (
                   <div key={student.id} className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-xs text-charcoal">{student.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-charcoal">{getStudentDisplayName(student)}</span>
                     <Select
                       className="h-8 w-[120px] text-xs"
                       value={attendanceOverrides[student.id] ?? attendanceSessionForm.defaultStatus}
@@ -1217,7 +1233,7 @@ export function App() {
                   className="flex items-center justify-between rounded-xl border border-soft-green px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm font-medium text-charcoal">{student.name}</p>
+                    <p className="text-sm font-medium text-charcoal">{getStudentDisplayName(student)}</p>
                     <p className="text-xs text-muted">
                       {entry.sessionTitle} • {formatDate(entry.date)}
                     </p>
@@ -1251,8 +1267,8 @@ export function App() {
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-heading text-lg text-deep-green">{student.name}</h3>
-                    <p className="text-xs text-muted">{student.email}</p>
+                    <h3 className="font-heading text-lg text-deep-green">{getStudentDisplayName(student)}</h3>
+                    <p className="text-xs text-muted">{getStudentDisplayEmail(student)}</p>
                   </div>
                   <Badge tone="Dropped">Archived</Badge>
                 </div>
@@ -1304,7 +1320,7 @@ export function App() {
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h2 className="font-heading text-2xl text-deep-green">Student Profile</h2>
-              <p className="text-sm text-muted">{selectedStudent.name}</p>
+              <p className="text-sm text-muted">{getStudentDisplayName(selectedStudent)}</p>
             </div>
             <Button variant="secondary" onClick={() => setSelectedStudentId(null)}>
               Close
@@ -1318,8 +1334,10 @@ export function App() {
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-2">
                 <Input
-                  value={selectedStudent.name}
+                  value={hidePii ? "Hidden in PII mode" : selectedStudent.name}
+                  readOnly={hidePii}
                   onChange={(event) => {
+                    if (hidePii) return;
                     const value = event.target.value;
                     void persistMutation((draft) => {
                       const target = draft.students.find((item) => item.id === selectedStudent.id);
@@ -1329,8 +1347,10 @@ export function App() {
                   }}
                 />
                 <Input
-                  value={selectedStudent.email}
+                  value={hidePii ? "hidden@redacted.local" : selectedStudent.email}
+                  readOnly={hidePii}
                   onChange={(event) => {
+                    if (hidePii) return;
                     const value = event.target.value;
                     void persistMutation((draft) => {
                       const target = draft.students.find((item) => item.id === selectedStudent.id);
@@ -1365,8 +1385,10 @@ export function App() {
                 />
                 <Input
                   placeholder="LinkedIn URL"
-                  value={selectedStudent.linkedinUrl}
+                  value={hidePii ? "Hidden in PII mode" : selectedStudent.linkedinUrl}
+                  readOnly={hidePii}
                   onChange={(event) => {
+                    if (hidePii) return;
                     const value = event.target.value;
                     void persistMutation((draft) => {
                       const target = draft.students.find((item) => item.id === selectedStudent.id);
@@ -2113,6 +2135,13 @@ export function App() {
                 <Download className="h-4 w-4" />
                 Export Report
               </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setHidePii((current) => !current)}
+              >
+                <EyeOff className="h-4 w-4" />
+                {hidePii ? "Show PII" : "Hide PII"}
+              </Button>
               <Button variant="secondary" onClick={() => void handleLogout()}>
                 Sign Out
               </Button>
@@ -2143,6 +2172,16 @@ export function App() {
             </button>
           ))}
         </nav>
+
+        {hidePii && (
+          <Card className="border-amber/40 bg-amber-50/60">
+            <CardContent>
+              <p className="text-sm text-charcoal">
+                PII hidden mode is active. Names, emails, and LinkedIn identifiers are redacted in the UI.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {error && (
           <Card className="border-risk-red/40">

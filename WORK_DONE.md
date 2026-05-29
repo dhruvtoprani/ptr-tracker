@@ -78,6 +78,12 @@
   - `docs/TECHNICAL_OVERVIEW.md`
 - Expanded `README.md` with screenshot-driven product tour and stack/architecture explanation.
 
+11. Added PII-safe demo mode
+- Added a global `Hide PII` toggle in the app UI.
+- Redacts student names, emails, and LinkedIn identifiers in high-visibility views.
+- Disables Email/LinkedIn quick actions while redaction mode is enabled.
+- Updated screenshot automation to enable redaction by default and regenerated public docs screenshots.
+
 ## Configuration Added
 
 - `APP_USERNAME` (default: `mentor`)

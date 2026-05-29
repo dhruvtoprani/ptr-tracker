@@ -62,6 +62,7 @@ flowchart LR
 - Dashboard KPIs for active/archived students, assignment completion, attendance, advising, and risk.
 - Student Pokedex cards with filters, search, quick actions, and detail drilldown.
 - Full profile drawer with advising cards, attendance history, notes, archive controls, and research profile metadata.
+- `Hide PII` toggle that redacts names, emails, and LinkedIn identifiers for safe demos/screenshots.
 - Global assignment creation that auto-populates assignment records for all active students.
 - Assignment Matrix with per-student status, grade, and feedback inline editing.
 - Attendance session builder with default status and per-student overrides.
@@ -113,10 +114,11 @@ Use this to regenerate all README screenshots automatically:
 APP_URL="https://ptr-tracker.vercel.app" \
 APP_USERNAME="<username>" \
 APP_PASSWORD="<password>" \
+HIDE_PII="true" \
 npm run docs:screenshots
 ```
 
-Screenshots are written to `docs/screenshots/`.
+Screenshots are written to `docs/screenshots/`. `HIDE_PII` defaults to `true`.
 
 ## Additional Technical Docs
 

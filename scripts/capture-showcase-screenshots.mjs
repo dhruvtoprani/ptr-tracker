@@ -6,6 +6,7 @@ import { chromium } from "playwright";
 const BASE_URL = process.env.APP_URL ?? "https://ptr-tracker.vercel.app";
 const USERNAME = process.env.APP_USERNAME ?? "ptr_admin";
 const PASSWORD = process.env.APP_PASSWORD ?? process.env.PTR_APP_PASSWORD;
+const HIDE_PII = process.env.HIDE_PII !== "false";
 
 if (!PASSWORD) {
   console.error("Missing password. Set APP_PASSWORD or PTR_APP_PASSWORD before running this script.");
@@ -40,6 +41,25 @@ async function loginIfNeeded(page) {
   await waitForDashboard(page);
 }
 
+async function enablePiiSafeMode(page) {
+  if (!HIDE_PII) {
+    return;
+  }
+
+  const alreadyHidden = page.getByRole("button", { name: "Show PII" });
+  if ((await alreadyHidden.count()) > 0) {
+    return;
+  }
+
+  const hideButton = page.getByRole("button", { name: "Hide PII" });
+  if ((await hideButton.count()) === 0) {
+    return;
+  }
+
+  await hideButton.first().click();
+  await page.waitForSelector("text=PII hidden mode is active", { timeout: 10000 });
+}
+
 async function captureDesktopScreenshots() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -50,6 +70,7 @@ async function captureDesktopScreenshots() {
   await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
   await loginIfNeeded(page);
   await waitForDashboard(page);
+  await enablePiiSafeMode(page);
 
   await saveScreenshot(page, "02-dashboard-overview.png", false);
 
@@ -93,6 +114,7 @@ async function captureMobileScreenshot() {
   await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
   await loginIfNeeded(page);
   await waitForDashboard(page);
+  await enablePiiSafeMode(page);
   await saveScreenshot(page, "09-mobile-dashboard.png", false);
 
   await context.close();

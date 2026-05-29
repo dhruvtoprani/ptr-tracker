@@ -106,3 +106,32 @@
 5. Validation
 - Confirmed screenshots were generated and written under `docs/screenshots`.
 - Confirmed README references match generated screenshot filenames.
+
+---
+
+## Date
+- May 29, 2026
+
+## Scope of this change
+- Add UI privacy toggle to redact PII for public screenshots and demos.
+- Regenerate all documentation screenshots with PII redaction enabled.
+
+## Step-by-step implementation log
+
+1. Added PII redaction mode in frontend
+- Added `Hide PII` / `Show PII` toggle in app header.
+- Added redaction helpers for student display name and email.
+- Redacted high-visibility PII surfaces across dashboard, student cards, matrix, attendance, archive, and profile panel.
+- Disabled direct Email/LinkedIn quick actions while PII mode is enabled.
+- Added visible banner indicating that PII hidden mode is active.
+
+2. Updated screenshot automation
+- Updated `scripts/capture-showcase-screenshots.mjs` to auto-enable PII mode before capturing.
+- Added `HIDE_PII` env switch (defaults to `true`) for capture behavior control.
+
+3. Regenerated documentation screenshots
+- Re-captured all showcase images in `docs/screenshots/` with redaction enabled.
+
+4. Updated docs
+- Updated `README.md` to include PII toggle in features and screenshot command docs.
+- Updated `docs/TECHNICAL_OVERVIEW.md` security notes with PII mode behavior.

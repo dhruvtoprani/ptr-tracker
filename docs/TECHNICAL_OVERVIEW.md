@@ -146,6 +146,7 @@ If durable cloud persistence is required on Vercel, recommended next step is a m
 - Credential comparison uses constant-time checks (`timingSafeEqual`).
 - Session TTL is configurable (`SESSION_TTL_SECONDS`).
 - Frontend stores the token in memory only (no localStorage token persistence).
+- UI includes a runtime `Hide PII` mode that redacts student names/emails/LinkedIn fields for demos and public screenshots.
 
 ## 10. Screenshot/Showcase Automation
 
